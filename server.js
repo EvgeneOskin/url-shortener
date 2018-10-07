@@ -4,6 +4,8 @@
 // init project
 const express = require('express')
 const app = express()
+const bodyParser = require('body-parser')
+const URL = require('url')
 
 // we've started you off with Express, 
 // but feel free to use whatever libs or frameworks you'd like through `package.json`.
@@ -17,9 +19,15 @@ app.get("/", (request, response) => {
 })
 
 app.post("/api/shorturl/new", (request, response) => {
-  dreams.push(request.query.dream)
+  const { url } = request.body
+  validateUrl(url)
   response.sendStatus(200)
 })
+
+const validateUrl = (url) => {
+  const { hostname } = new URL(url)
+  dns.lookup(myURL.hostname;, cb) 
+}
 
 // listen for requests :)
 const listener = app.listen(process.env.PORT, () => {
