@@ -13,7 +13,6 @@ const util = require('util')
 app.use(bodyParser.json({ type: 'application/*+json' }))
 app.use(bodyParser.urlencoded({ extended: false }))
 
-const lookup = util.promisify(dns.lookup);
 
 // we've started you off with Express, 
 // but feel free to use whatever libs or frameworks you'd like through `package.json`.
@@ -31,17 +30,18 @@ app.post("/api/shorturl/new", async (req, res) => {
   try {
     await validateUrl(url)
     const shortUrl = await makeShortUrl(url)
-    
+    console.log(shortUrl)
     res.json({ original_url: url, "short_url": shortUrl._id })
   } catch(err) {
-    res.sendStatus(400)
+    res.statusCode = 400;
     res.json({ error: "invalid URL" })
   }
 })
 
+const lookupDNS = util.promisify(dns.lookup);
 const validateUrl = url => {
   const { hostname } = URL.parse(url)
-  return dns.lookup(hostname) 
+  return lookupDNS(hostname) 
 }
 const mongoose = require('mongoose');
 mongoose.connect(process.env.MONGO_URI);
@@ -53,22 +53,20 @@ const linkSchema = new mongoose.Schema({
 
 
 const Link = mongoose.model('Link', linkSchema);
-const updateLink = util.promisify(Link.updateOne)
 
-const makeShortUrl = url => updateLink({link: url}, {$inc: { count: 1} }, {upsert: true})
+const makeShortUrl = url => Link.findOneAndUpdate({link: url}, {$inc: { count: 1} }, {upsert: true})
 
 
 app.get("/api/shorturl/:id", async (req, res) => {
   const id = req.param('id')
   try {
-    const shortUrl = await findUrl(id)
+    const shortUrl = await Link.findById(id)
     res.redirect(shortUrl.link)
   } catch(err) {
-    res.sendStatus(404)
-    res.json({ error: "no sure URL" })
+    res.statusCode = 404;
+    res.json({ error: "no such URL" })
   }
 })
-const findUrl = util.promisify(Link.findById)
 
 
 // listen for requests :)
