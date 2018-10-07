@@ -6,6 +6,10 @@ const express = require('express')
 const app = express()
 const bodyParser = require('body-parser')
 const URL = require('url')
+const dns = require('dns')
+const util = require('util')
+
+const lookup = util.promisify(dns.lookup);
 
 // we've started you off with Express, 
 // but feel free to use whatever libs or frameworks you'd like through `package.json`.
@@ -18,15 +22,24 @@ app.get("/", (request, response) => {
   response.sendFile(__dirname + '/views/index.html')
 })
 
-app.post("/api/shorturl/new", (request, response) => {
-  const { url } = request.body
-  validateUrl(url)
-  response.sendStatus(200)
+app.post("/api/shorturl/new", async (req, res, next) => {
+  const { url } = req.body
+  try {
+    await validateUrl(url)
+    const shortUrl = await makeShortUrl(url)
+    
+    res.json({ original_url: url, "short_url": shortUrl })
+  } catch(err) {
+    response.sendStatus(400)
+    res.json({ error: "invalid URL" })
+  }
 })
 
-const validateUrl = (url) => {
-  const { hostname } = new URL(url)
-  dns.lookup(myURL.hostname;, cb) 
+const validateUrl = url => {
+  const { hostname } = URL.parse(url)
+  return dns.lookup(hostname) 
+}
+const makeShortUrl = url => {
 }
 
 // listen for requests :)
