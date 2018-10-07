@@ -30,7 +30,7 @@ app.post("/api/shorturl/new", async (req, res, next) => {
     
     res.json({ original_url: url, "short_url": shortUrl })
   } catch(err) {
-    response.sendStatus(400)
+    res.sendStatus(400)
     res.json({ error: "invalid URL" })
   }
 })
@@ -39,7 +39,20 @@ const validateUrl = url => {
   const { hostname } = URL.parse(url)
   return dns.lookup(hostname) 
 }
+const mongoose = require('mongoose');
+mongoose.connect(process.env.MONGO_URI);
+
+const linkSchema = new mongoose.Schema({
+  link: { type: String, required: true },
+  count: Number,
+});
+
+
+const Link = mongoose.model('Link', linkSchema);
+const updateLink = url.promisify(Link.updateOne)
+
 const makeShortUrl = url => {
+  updateLink({link: url}, {count + 1}, {upsert}
 }
 
 // listen for requests :)
