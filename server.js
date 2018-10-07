@@ -9,6 +9,10 @@ const URL = require('url')
 const dns = require('dns')
 const util = require('util')
 
+
+app.use(bodyParser.json({ type: 'application/*+json' }))
+app.use(bodyParser.urlencoded({ extended: false }))
+
 const lookup = util.promisify(dns.lookup);
 
 // we've started you off with Express, 
@@ -22,7 +26,7 @@ app.get("/", (request, response) => {
   response.sendFile(__dirname + '/views/index.html')
 })
 
-app.post("/api/shorturl/new", async (req, res, next) => {
+app.post("/api/shorturl/new", async (req, res) => {
   const { url } = req.body
   try {
     await validateUrl(url)
@@ -54,7 +58,7 @@ const updateLink = util.promisify(Link.updateOne)
 const makeShortUrl = url => updateLink({link: url}, {$inc: { count: 1} }, {upsert: true})
 
 
-app.get("/api/shorturl/:id", async (req, res, next) => {
+app.get("/api/shorturl/:id", async (req, res) => {
   const id = req.param('id')
   try {
     const shortUrl = await findUrl(id)
