@@ -28,7 +28,7 @@ app.post("/api/shorturl/new", async (req, res, next) => {
     await validateUrl(url)
     const shortUrl = await makeShortUrl(url)
     
-    res.json({ original_url: url, "short_url": shortUrl })
+    res.json({ original_url: url, "short_url": shortUrl._id })
   } catch(err) {
     res.sendStatus(400)
     res.json({ error: "invalid URL" })
@@ -49,11 +49,23 @@ const linkSchema = new mongoose.Schema({
 
 
 const Link = mongoose.model('Link', linkSchema);
-const updateLink = url.promisify(Link.updateOne)
+const updateLink = util.promisify(Link.updateOne)
 
-const makeShortUrl = url => {
-  updateLink({link: url}, {count + 1}, {upsert}
-}
+const makeShortUrl = url => updateLink({link: url}, {$inc: { count: 1} }, {upsert: true})
+
+
+app.get("/api/shorturl/:id", async (req, res, next) => {
+  const id = req.param('id')
+  try {
+    const shortUrl = await findUrl(id)
+    res.redirect(shortUrl.link)
+  } catch(err) {
+    res.sendStatus(404)
+    res.json({ error: "no sure URL" })
+  }
+})
+const findUrl = util.promisify(Link.findById)
+
 
 // listen for requests :)
 const listener = app.listen(process.env.PORT, () => {
